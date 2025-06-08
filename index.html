@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PicPitch Collage</title>
-    <link rel="icon" type="image/svg+xml" href="picpitch-icon.svg">
+    <link rel="icon" type="image/svg+xml" href="assets/picpitch-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // Add this line
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -59,7 +59,7 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(243, 244, 246, 0.6);    /* light gray, semi-transparent */
+            background: rgba(243, 244, 246, 0.6);
             border: 1px solid rgba(156, 163, 175, 0.5);
             color: rgba(55, 65, 81, 0.8);
             width: 32px;
@@ -306,7 +306,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-8 relative z-50">
             <div class="flex items-center gap-4">
-                <div class="logo"><img src="picpitch-icon.svg"></div>
+                <div class="logo"><img src="assets/picpitch-icon.svg"></div>
                 <div>
                     <h1 class="text-3xl font-bold text-gray-800 dark:text-white">PicPitch Collage</h1>
                     <p class="text-gray-600 dark:text-gray-300 text-sm">Create randomized photo collages</p>
@@ -418,8 +418,6 @@
         let currentDragCard = null;
         const cardsContainer = document.getElementById('cardsContainer');
         const fileInput = document.getElementById('fileInput');
-        
-        // Removed undo/redo system
 
         // random placement (allow overlap, less regular)
         function getGridPosition(index, total) {
@@ -657,7 +655,7 @@
         aspectToggle.addEventListener('change', updateCardSizes);
         sizeSlider.addEventListener('input',    updateCardSizes);
 
-        // Help tooltip - fixed event handling
+        // Help tooltip
         const helpTooltip = document.getElementById('helpTooltip');
         const helpContent = document.getElementById('helpContent');
         let helpTimeout;
