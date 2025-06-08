@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collage Creator</title>
+    <title>PicPitch Collage</title>
+    <link rel="icon" type="image/svg+xml" href="picpitch-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class', // Add this line
             theme: {
                 extend: {
                     colors: {
@@ -17,16 +19,26 @@
         }
     </script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+    </style>
+    <style>
         .card-container {
-            width: 200px;
-            height: 300px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 250px;
+            height: 375px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            user-select: none;
         }
         
         .card-container:hover {
-            transform: scale(1.05) !important;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2) !important;
             z-index: 1000 !important;
+        }
+        
+        .card-container.dragging {
+            transform: scale(1.05) !important;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3) !important;
+            z-index: 1001 !important;
+            cursor: grabbing !important;
         }
         
         .drag-over {
@@ -40,41 +52,297 @@
             height: 100%;
             object-fit: cover;
             border-radius: 50px;
+            pointer-events: none;
+        }
+        
+        .help-tooltip {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(243, 244, 246, 0.6);    /* light gray, semi-transparent */
+            border: 1px solid rgba(156, 163, 175, 0.5);
+            color: rgba(55, 65, 81, 0.8);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(55, 65, 81, 0.1);
+            z-index: 2000;
+        }
+
+        .help-tooltip:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(55, 65, 81, 0.15);
+            background: rgba(243, 244, 246, 0.8);
+        }
+
+        .help-tooltip span {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(55, 65, 81, 0.8);
+            user-select: none;
+        }
+
+        .help-content {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background: rgba(243, 244, 246, 0.9);    /* light gray, slightly more opaque */
+            border: 1px solid rgba(156, 163, 175, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(55, 65, 81, 0.1);
+            max-width: 300px;
+            z-index: 2001;
+            display: none;
+        }
+        
+        .help-content.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         @media (max-width: 768px) {
             .card-container {
-                width: 150px;
-                height: 225px;
+                width: 180px;
+                height: 270px;
             }
         }
         
         .dark {
-            background-color: #181818;
+            background-color: #111827;
         }
         
         .dark .card-container {
-            border-color: #404040;
-            background-color: #2a2a2a;
+            border-color: #374151;
+            background-color: #1f2937;
         }
         
         .dark .placeholder-icon {
-            color: #888;
+            color: #6b7280;
+        }
+        
+        .dark .help-content {
+            background-color: rgba(31, 41, 55, 0.95);
+            border-color: #374151;
+            color: #e5e7eb;
+        }
+        
+        .dark .help-tooltip {
+            background: rgba(31, 41, 55, 0.9);
+            border-color: #374151;
+            color: #e5e7eb;
+        }
+        
+        .dark .help-tooltip:hover {
+            background: rgba(31, 41, 55, 1);
+        }
+        
+        .dark .help-tooltip span {
+            color: #e5e7eb;
+        }
+        
+        .logo {
+            width: 40px;
+            height: 40px;
+            /* background: linear-gradient(135deg, #5D5CDE, #7C7CE8); */
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Dark mode toggle */
+        .dark-toggle {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+            margin: 0 10px;
+        }
+        
+        .dark-toggle:hover {
+            background: #d1d5db;
+        }
+        
+        .dark-toggle.active {
+            background: #5D5CDE;
+        }
+        
+        .dark-toggle.active:hover {
+            background: #4f46e5;
+        }
+        
+        .dark-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dark-toggle.active::after {
+            transform: translateX(24px);
+        }
+
+        /* Custom checkbox */
+        .custom-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            transition: all 0.2s ease;
+            position: relative;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .custom-checkbox:hover {
+            border-color: #6366f1;
+        }
+        .custom-checkbox:checked {
+            background: #6366f1;
+            border-color: #6366f1;
+        }
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 6px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* Custom slider */
+        .custom-slider {
+            -webkit-appearance: none;
+            width: 100px;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            outline: none;
+            transition: background 0.2s;
+            margin-left: 12px;
+            margin-right: 8px;
+        }
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .custom-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        .custom-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .dark .help-tooltip {
+            background: linear-gradient(135deg, #4338ca, #7c3aed);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .dark .custom-checkbox {
+            background: #374151;
+            border-color: #6b7280;
+        }
+        .dark .custom-checkbox:checked {
+            background: #6366f1;
+            border-color: #6366f1;
+        }
+        .dark .custom-slider {
+            background: #4b5563;
+        }
+
+        .dark label.text-sm {
+            color: white;
+            transition: all 0.2s ease;
         }
     </style>
 </head>
-<body class="bg-white dark:bg-gray-900 min-h-screen overflow-hidden">
+<body class="bg-white dark:bg-gray-900 min-h-screen overflow-hidden transition-colors duration-300">
     <div class="fixed inset-0 p-4">
         <!-- Header -->
-        <div class="text-center mb-8 relative z-50">
-            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2">Collage Creator</h1>
-            <p class="text-gray-600 dark:text-gray-300">Click on cards or drag & drop images to create your collage</p>
-            <button id="addCard" class="mt-4 px-6 py-2 bg-primary text-white rounded-full hover:bg-opacity-90 transition-colors">
-                Add More Cards
-            </button>
-            <button id="clearAll" class="mt-4 ml-2 px-6 py-2 bg-red-500 text-white rounded-full hover:bg-opacity-90 transition-colors">
-                Clear All
-            </button>
+        <div class="flex items-center justify-between mb-8 relative z-50">
+            <div class="flex items-center gap-4">
+                <div class="logo"><img src="picpitch-icon.svg"></div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">PicPitch Collage</h1>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">Create randomized photo collages</p>
+                </div>
+            </div>
+            <div class="flex gap-2 items-center">
+                <button id="darkToggle" class="dark-toggle relative" title="Toggle dark mode">
+                    <span class="toggle-icon-sun absolute left-1 top-1/2 transform -translate-y-1/2" aria-hidden="true">
+                        <!-- Sun SVG -->
+                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-yellow-400">
+                            <circle cx="12" cy="12" r="5" stroke-width="2"/>
+                            <path stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                        </svg>
+                    </span>
+                    <span class="toggle-icon-moon absolute right-1 top-1/2 transform -translate-y-1/2" aria-hidden="true">
+                        <!-- Moon SVG -->
+                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-gray-500 dark:text-yellow-300">
+                            <path stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+                        </svg>
+                    </span>
+                </button>
+                <label class="flex items-center text-sm">
+                    <input type="checkbox" id="aspectToggle" class="mr-1 custom-checkbox">
+                    Landscape
+                </label>
+                <input type="range" id="sizeSlider" min="100" max="600" value="250" class="w-24 custom-slider">
+                <button id="addCard" class="px-4 py-2 bg-primary text-white rounded-full hover:bg-opacity-90 transition-colors text-sm">
+                    Add Cards
+                </button>
+                <button id="clearAll" class="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-opacity-90 transition-colors text-sm">
+                    Clear All
+                </button>
+                <div class="help-tooltip" id="helpTooltip">
+                    <span class="text-sm">?</span>
+                </div>
+            </div>
         </div>
         
         <!-- Cards Container -->
@@ -82,37 +350,86 @@
         
         <!-- Hidden file input -->
         <input type="file" id="fileInput" accept="image/*" class="hidden">
+        
+        <!-- Help Content -->
+        <div class="help-content dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200" id="helpContent">
+            <h3 class="font-bold text-gray-800 dark:text-white mb-2">How to use:</h3>
+            <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                <li>• Click or drag images onto cards</li>
+                <li>• Drag cards to move them around</li>
+                <li>• Right-click to delete a card</li>
+                <li>• Scroll wheel over cards to rotate</li>
+            </ul>
+        </div>
     </div>
 
     <script>
-        // Dark mode detection
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // Dark mode functionality
+        let isDarkMode = false;
+
+        // Check for saved dark mode preference or default to system preference
+        if (localStorage.getItem('darkMode') === 'true' || 
+            (!localStorage.getItem('darkMode') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            isDarkMode = true;
             document.documentElement.classList.add('dark');
         }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
+
+        // Update toggle button state
+        const darkToggle = document.getElementById('darkToggle');
+        function updateDarkToggle() {
+            if (isDarkMode) {
+                darkToggle.classList.add('active');
+            } else {
+                darkToggle.classList.remove('active');
+            }
+        }
+        updateDarkToggle();
+
+        // Dark mode toggle handler
+        darkToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
+            }
+            localStorage.setItem('darkMode', isDarkMode.toString());
+            updateDarkToggle();
+        });
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (!localStorage.getItem('darkMode')) {
+                isDarkMode = event.matches;
+                if (isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                updateDarkToggle();
             }
         });
 
         let cardCount = 0;
         let currentTargetCard = null;
+        let isDragging = false;
+        let dragStarted = false;
+        let dragOffset = { x: 0, y: 0 };
+        let currentDragCard = null;
         const cardsContainer = document.getElementById('cardsContainer');
         const fileInput = document.getElementById('fileInput');
+        
+        // Removed undo/redo system
 
-        function getRandomPosition() {
+        // random placement (allow overlap, less regular)
+        function getGridPosition(index, total) {
             const containerRect = cardsContainer.getBoundingClientRect();
-            const cardWidth = window.innerWidth <= 768 ? 150 : 200;
-            const cardHeight = window.innerWidth <= 768 ? 225 : 300;
-            
-            const maxX = containerRect.width - cardWidth - 20;
-            const maxY = containerRect.height - cardHeight - 20;
-            
+            const cardWidth = window.innerWidth <= 768 ? 180 : 250;
+            const cardHeight = window.innerWidth <= 768 ? 270 : 375;
+            const margin = 20;
             return {
-                x: Math.random() * Math.max(0, maxX) + 10,
-                y: Math.random() * Math.max(0, maxY) + 10
+                x: Math.random() * (containerRect.width - cardWidth - margin * 2) + margin,
+                y: Math.random() * (containerRect.height - cardHeight - margin * 2) + margin
             };
         }
 
@@ -124,41 +441,80 @@
             return Math.floor(Math.random() * 100) + 1;
         }
 
-        function createCard() {
-            cardCount++;
-            const card = document.createElement('div');
-            const position = getRandomPosition();
-            const rotation = getRandomRotation();
-            const zIndex = getRandomZIndex();
-            
-            card.className = 'card-container absolute bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-pointer flex items-center justify-center';
-            card.style.left = `${position.x}px`;
-            card.style.top = `${position.y}px`;
-            card.style.transform = `rotate(${rotation}deg)`;
-            card.style.zIndex = zIndex;
-            card.style.borderRadius = '50px';
-            card.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
-            card.id = `card-${cardCount}`;
-            
-            card.innerHTML = `
-                <div class="placeholder-icon text-gray-400 dark:text-gray-500 text-center">
-                    <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    <p class="text-sm">Click or drag image</p>
-                </div>
-            `;
-            
-            // Click to upload
-            card.addEventListener('click', () => {
-                currentTargetCard = card;
-                fileInput.click();
+        function setupCardEvents(card) {
+            // Click to upload - only if not dragging
+            card.addEventListener('click', (e) => {
+                if (!isDragging && !dragStarted) {
+                    currentTargetCard = card;
+                    fileInput.click();
+                }
             });
             
-            // Drag and drop
+            // Scroll wheel rotation
+            card.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const currentTransform = card.style.transform || '';
+                const rotateMatch = currentTransform.match(/rotate\(([^)]+)deg\)/);
+                let currentRotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+                
+                const rotationStep = e.deltaY > 0 ? 5 : -5;
+                currentRotation += rotationStep;
+                
+                card.style.transform = currentTransform.replace(/rotate\([^)]+deg\)/, '').trim() + ` rotate(${currentRotation}deg)`;
+            });
+            
+            // Drag to move
+            card.addEventListener('mousedown', (e) => {
+                if (e.button === 0) { // Left click only
+                    dragStarted = false;
+                    const startX = e.clientX;
+                    const startY = e.clientY;
+                    
+                    const handleMouseMove = (moveEvent) => {
+                        const deltaX = Math.abs(moveEvent.clientX - startX);
+                        const deltaY = Math.abs(moveEvent.clientY - startY);
+                        
+                        if (!dragStarted && (deltaX > 5 || deltaY > 5)) {
+                            dragStarted = true;
+                            isDragging = true;
+                            currentDragCard = card;
+                            card.classList.add('dragging');
+                            card.style.cursor = 'grabbing';
+                            
+                            const rect = card.getBoundingClientRect();
+                            dragOffset.x = startX - rect.left;
+                            dragOffset.y = startY - rect.top;
+                        }
+                    };
+                    
+                    const handleMouseUp = () => {
+                        document.removeEventListener('mousemove', handleMouseMove);
+                        document.removeEventListener('mouseup', handleMouseUp);
+                        
+                        setTimeout(() => {
+                            dragStarted = false;
+                        }, 100);
+                    };
+                    
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                    
+                    e.preventDefault();
+                }
+            });
+            
+            // Right click to delete
+            card.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                card.remove();
+            });
+            
+            // Drag and drop for images
             card.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                card.classList.add('drag-over');
+                if (!isDragging) {
+                    card.classList.add('drag-over');
+                }
             });
             
             card.addEventListener('dragleave', () => {
@@ -174,8 +530,49 @@
                     loadImageToCard(card, files[0]);
                 }
             });
+        }
+
+        function createCard(index = 0, total = 1) {
+            cardCount++;
+            const card = document.createElement('div');
+            const position = getGridPosition(index, total);
+            const rotation = getRandomRotation();
+            const zIndex = getRandomZIndex();
             
+            // Get current size settings
+            const sizeValue = +document.getElementById('sizeSlider').value;
+            const isLandscape = document.getElementById('aspectToggle').checked;
+            
+            card.className = 'card-container absolute bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-grab flex items-center justify-center';
+            card.style.left = `${position.x}px`;
+            card.style.top = `${position.y}px`;
+            card.style.transform = `rotate(${rotation}deg)`;
+            card.style.zIndex = zIndex;
+            card.style.borderRadius = '50px';
+            card.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+            card.id = `card-${cardCount}`;
+            
+            // Set correct aspect ratio
+            if (isLandscape) {
+                card.style.width = `${sizeValue * 3/2}px`;
+                card.style.height = `${sizeValue}px`;
+            } else {
+                card.style.width = `${sizeValue}px`;
+                card.style.height = `${sizeValue * 3/2}px`;
+            }
+            
+            card.innerHTML = `
+                <div class="placeholder-icon text-gray-400 dark:text-gray-500 text-center">
+                    <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="text-sm">Click or drag image</p>
+                </div>
+            `;
+            
+            setupCardEvents(card);
             cardsContainer.appendChild(card);
+            return card;
         }
 
         function loadImageToCard(card, file) {
@@ -187,6 +584,36 @@
             reader.readAsDataURL(file);
         }
 
+        // Global mouse events for dragging
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && currentDragCard) {
+                const x = e.clientX - dragOffset.x;
+                const y = e.clientY - dragOffset.y;
+                
+                // Keep within bounds
+                const containerRect = cardsContainer.getBoundingClientRect();
+                const cardRect = currentDragCard.getBoundingClientRect();
+                
+                const maxX = containerRect.width - cardRect.width;
+                const maxY = containerRect.height - cardRect.height;
+                
+                const clampedX = Math.max(0, Math.min(x, maxX));
+                const clampedY = Math.max(0, Math.min(y, maxY));
+                
+                currentDragCard.style.left = `${clampedX}px`;
+                currentDragCard.style.top = `${clampedY}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging && currentDragCard) {
+                currentDragCard.classList.remove('dragging');
+                currentDragCard.style.cursor = 'grab';
+                isDragging = false;
+                currentDragCard = null;
+            }
+        });
+
         // File input handler
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0 && currentTargetCard) {
@@ -196,12 +623,83 @@
         });
 
         // Add card button
-        document.getElementById('addCard').addEventListener('click', createCard);
+        document.getElementById('addCard').addEventListener('click', () => {
+            const existingCards = document.querySelectorAll('.card-container').length;
+            for (let i = 0; i < 3; i++) {
+                createCard(existingCards + i, existingCards + 3);
+            }
+        });
 
         // Clear all button
         document.getElementById('clearAll').addEventListener('click', () => {
             cardsContainer.innerHTML = '';
             cardCount = 0;
+        });
+
+        // aspect-ratio toggle & size slider
+        const aspectToggle = document.getElementById('aspectToggle');
+        const sizeSlider   = document.getElementById('sizeSlider');
+
+        function updateCardSizes() {
+            const v = +sizeSlider.value;
+            const land = aspectToggle.checked;
+            document.querySelectorAll('.card-container').forEach(card => {
+                if (land) {
+                    card.style.width  = `${v * 3/2}px`;
+                    card.style.height = `${v}px`;
+                } else {
+                    card.style.width  = `${v}px`;
+                    card.style.height = `${v * 3/2}px`;
+                }
+            });
+        }
+
+        aspectToggle.addEventListener('change', updateCardSizes);
+        sizeSlider.addEventListener('input',    updateCardSizes);
+
+        // Help tooltip - fixed event handling
+        const helpTooltip = document.getElementById('helpTooltip');
+        const helpContent = document.getElementById('helpContent');
+        let helpTimeout;
+        let isHelpVisible = false;
+
+        function showHelp() {
+            clearTimeout(helpTimeout);
+            helpContent.classList.add('show');
+            isHelpVisible = true;
+        }
+
+        function hideHelp() {
+            helpTimeout = setTimeout(() => {
+                helpContent.classList.remove('show');
+                isHelpVisible = false;
+            }, 200);
+        }
+
+        helpTooltip.addEventListener('mouseenter', showHelp);
+        helpTooltip.addEventListener('mouseleave', hideHelp);
+        helpTooltip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isHelpVisible) {
+                helpContent.classList.remove('show');
+                isHelpVisible = false;
+            } else {
+                showHelp();
+            }
+        });
+
+        helpContent.addEventListener('mouseenter', () => {
+            clearTimeout(helpTimeout);
+        });
+
+        helpContent.addEventListener('mouseleave', hideHelp);
+
+        // Close help when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!helpTooltip.contains(e.target) && !helpContent.contains(e.target)) {
+                helpContent.classList.remove('show');
+                isHelpVisible = false;
+            }
         });
 
         // Prevent default drag behavior on the whole page
@@ -210,19 +708,18 @@
 
         // Initialize with some cards
         for (let i = 0; i < 6; i++) {
-            createCard();
+            createCard(i, 6);
         }
 
         // Handle window resize
         window.addEventListener('resize', () => {
-            // Reposition cards if they're out of bounds
             const cards = document.querySelectorAll('.card-container');
-            cards.forEach(card => {
+            cards.forEach((card, index) => {
                 const rect = card.getBoundingClientRect();
                 const containerRect = cardsContainer.getBoundingClientRect();
                 
                 if (rect.right > containerRect.right || rect.bottom > containerRect.bottom) {
-                    const newPos = getRandomPosition();
+                    const newPos = getGridPosition(index, cards.length);
                     card.style.left = `${newPos.x}px`;
                     card.style.top = `${newPos.y}px`;
                 }
