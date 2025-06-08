@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="picpitch-logo.svg" alt="PicPitch Logo" width="400" />
+    <img src="assets/picpitch-logo.svg" alt="PicPitch Logo" width="400" />
 </p>
 
 # PicPitch
