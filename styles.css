@@ -224,6 +224,8 @@
 
 /* Custom slider */
 .custom-slider {
+  -webkit-appearance: none; /* remove its default styling for the slider element */
+  appearance: none;
   width: 100px;
   height: 6px;
   background: #e5e7eb;
@@ -249,14 +251,13 @@
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
 }
 .custom-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   border: 3px solid white;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
   cursor: pointer;
-  border: none;
 }
 
 .dark .help-tooltip {
