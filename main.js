@@ -60,6 +60,9 @@ let hasDraggedThisInteraction = false; // Flag to distinguish click from drag
 
 const cardsContainer = document.getElementById("cardsContainer");
 const fileInput = document.getElementById("fileInput");
+const headerSection = document.getElementById("headerSection");
+const pageContainer = document.getElementById("pageContainer");
+let isHeaderVisible = true;
 
 // random placement (allow overlap, less regular)
 function getGridPosition(index, total) {
@@ -344,6 +347,25 @@ document.addEventListener("click", (e) => {
 // Prevent default drag behavior on the whole page
 document.addEventListener("dragover", (e) => e.preventDefault());
 document.addEventListener("drop", (e) => e.preventDefault());
+
+// Toggle header visibility
+document.addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === 'h') {
+        // Prevent toggling if an input field is focused (e.g., future search bar)
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+            return;
+        }
+        
+        isHeaderVisible = !isHeaderVisible;
+        if (isHeaderVisible) {
+            headerSection.classList.remove('hidden');
+            pageContainer.style.paddingTop = ''; // Revert to CSS p-4
+        } else {
+            headerSection.classList.add('hidden');
+            pageContainer.style.paddingTop = '0px';
+        }
+    }
+});
 
 // Initialize with some cards
 for (let i = 0; i < 6; i++) {
