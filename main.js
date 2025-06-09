@@ -463,8 +463,8 @@ window.addEventListener("resize", () => {
 
 // Add touch support for mobile devices
 function enableTouchSupport() {
-  let initialDistance = 0;
-  let initialRotation = 0;
+  let initialTouchAngle = 0; // Stores the initial angle of the two fingers
+  let initialCardRotation = 0; // Stores the card's rotation at the start of the two-finger gesture
   let currentRotatingCard = null;
   let isRotating = false;
 
@@ -495,22 +495,20 @@ function enableTouchSupport() {
         dragOffset.y = e.touches[0].clientY - parseFloat(cardStyle.top);
       } else if (e.touches.length === 2) {
         // Two fingers - handle rotation
-        e.preventDefault();
+        e.preventDefault(); // Prevent default actions like pinch-zoom on the page
         isRotating = true;
         currentRotatingCard = cardElement;
         
-        // Calculate initial distance and rotation
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
-        initialDistance = Math.sqrt(
-          Math.pow(touch2.clientX - touch1.clientX, 2) + 
-          Math.pow(touch2.clientY - touch1.clientY, 2)
-        );
         
         // Get current rotation from the card
         const currentTransform = cardElement.style.transform || "";
         const rotateMatch = currentTransform.match(/rotate\(([^)]+)deg\)/);
-        initialRotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+        initialCardRotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+
+        // Calculate initial angle of the two fingers
+        initialTouchAngle = Math.atan2(touch2.clientY - touch1.clientY, touch2.clientX - touch1.clientX) * (180 / Math.PI);
       }
     }
   }, { passive: false });
@@ -548,22 +546,29 @@ function enableTouchSupport() {
       currentDragCard.style.left = `${x}px`;
       currentDragCard.style.top = `${y}px`;
     } else if (e.touches.length === 2 && currentRotatingCard && isRotating) {
-      e.preventDefault();
+      e.preventDefault(); // Prevent default actions during rotation
       
-      // Calculate rotation based on angle between two fingers
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       
-      const angle = Math.atan2(touch2.clientY - touch1.clientY, touch2.clientX - touch1.clientX);
-      const degrees = angle * (180 / Math.PI);
+      // Calculate current angle of the two fingers
+      const currentTouchAngle = Math.atan2(touch2.clientY - touch1.clientY, touch2.clientX - touch1.clientX) * (180 / Math.PI);
       
-      // Apply rotation to the card
+      // Calculate the change in angle
+      const deltaAngle = currentTouchAngle - initialTouchAngle;
+      
+      // Calculate the new rotation for the card
+      const newCardRotation = initialCardRotation + deltaAngle;
+      
+      // Apply rotation to the card, preserving other transforms
       const currentTransform = currentRotatingCard.style.transform || "";
-      const newRotation = initialRotation + (degrees * 0.5); // Scale down rotation sensitivity
+      let baseTransform = currentTransform.replace(/rotate\([^)]+deg\)/, "").trim();
       
-      currentRotatingCard.style.transform =
-        currentTransform.replace(/rotate\([^)]+deg\)/, "").trim() +
-        ` rotate(${newRotation}deg)`;
+      if (baseTransform) {
+        baseTransform += " "; // Add a space if other transforms exist
+      }
+      
+      currentRotatingCard.style.transform = `${baseTransform}rotate(${newCardRotation}deg)`;
     }
   }, { passive: false });
 
@@ -711,7 +716,7 @@ function manageMobileMenu() {
     const helpText = document.createElement("div");
     helpText.className = "text-xs text-gray-500 dark:text-gray-400 mt-2";
     helpText.innerHTML = `
-      <p>• Double-tap cards to rotate</p>
+      <p>• Use two fingers to rotate cards</p>
       <p>• Long-press to delete a card</p>
       <p>• Drag to move cards around</p>
     `;
