@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,6 +24,7 @@
     </style>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body class="bg-white dark:bg-gray-900 min-h-screen overflow-hidden transition-colors duration-300">
     <div id="pageContainer" class="fixed inset-0 p-4">
         <!-- Header -->
@@ -35,57 +37,71 @@
                 </div>
             </div>
             <div class="flex gap-2 items-center">
-                <button id="darkToggle" class="dark-toggle relative" title="Toggle dark mode">
+                <!-- Added proper ARIA labels to interactive elements -->
+                <button id="darkToggle" class="dark-toggle relative" title="Toggle dark mode"
+                    aria-label="Toggle dark mode">
                     <span class="toggle-icon-sun absolute left-1 top-1/2 transform -translate-y-1/2" aria-hidden="true">
                         <!-- Sun SVG -->
-                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-yellow-400">
-                            <circle cx="12" cy="12" r="5" stroke-width="2"/>
-                            <path stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            class="text-yellow-400">
+                            <circle cx="12" cy="12" r="5" stroke-width="2" />
+                            <path stroke-width="2"
+                                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
                         </svg>
                     </span>
-                    <span class="toggle-icon-moon absolute right-1 top-1/2 transform -translate-y-1/2" aria-hidden="true">
+                    <span class="toggle-icon-moon absolute right-1 top-1/2 transform -translate-y-1/2"
+                        aria-hidden="true">
                         <!-- Moon SVG -->
-                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-gray-500 dark:text-yellow-300">
-                            <path stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            class="text-gray-500 dark:text-yellow-300">
+                            <path stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
                         </svg>
                     </span>
                 </button>
-                <label class="flex items-center text-sm">
+                <label for="aspectToggle" class="flex items-center text-sm text-gray-800 dark:text-white">
                     <input type="checkbox" id="aspectToggle" class="mr-1 custom-checkbox">
                     Landscape
                 </label>
-                <input type="range" id="sizeSlider" min="100" max="600" value="250" class="w-24 custom-slider">
-                <button id="addCard" class="px-4 py-2 bg-primary text-white rounded-full hover:bg-opacity-90 transition-colors text-sm">
+                <label for="sizeSlider" class="sr-only">Card size</label>
+                <input type="range" id="sizeSlider" min="100" max="600" value="250" class="w-24 custom-slider"
+                    aria-label="Card size">
+                <button id="addCard"
+                    class="px-4 py-2 bg-primary text-white rounded-full hover:bg-opacity-90 transition-colors text-sm">
                     Add Cards
                 </button>
-                <button id="clearAll" class="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-opacity-90 transition-colors text-sm">
+                <button id="clearAll"
+                    class="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-opacity-90 transition-colors text-sm">
                     Clear All
                 </button>
-                <div class="help-tooltip" id="helpTooltip">
+                <div class="help-tooltip" id="helpTooltip" role="button" tabindex="0" aria-label="Help">
                     <span class="text-sm">?</span>
                 </div>
             </div>
         </div>
-        
+
         <!-- Cards Container -->
         <div id="cardsContainer" class="relative w-full h-full"></div>
-        
+
         <!-- Hidden file input -->
         <input type="file" id="fileInput" accept="image/*" class="hidden">
-        
-        <!-- Help Content -->
-        <div class="help-content dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200" id="helpContent">
-            <h3 class="font-bold text-gray-800 dark:text-white mb-2">How to use:</h3>
+
+        <!-- Help Content with better semantics -->
+        <div class="help-content dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200" id="helpContent"
+            role="dialog" aria-labelledby="helpTitle">
+            <h3 id="helpTitle" class="font-bold text-gray-800 dark:text-white mb-2">How to use:</h3>
             <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                 <li>• Click or drag images onto cards</li>
                 <li>• Drag cards to move them around</li>
-                <li>• Right-click to delete a card</li>
-                <li>• Scroll wheel over cards to rotate</li>
-                <li>• Press 'H' to toggle header visibility</li>
+                <li>• Long-press to delete a card</li>
+                <li class="hidden md:block">• Scroll wheel over cards to rotate</li>
+                <li class="block md:hidden">• Double-tap cards to rotate</li>
+                <li class="hidden md:block">• Press 'H' to toggle header visibility</li>
             </ul>
         </div>
+
     </div>
 
     <script type="module" src="main.js"></script>
 </body>
+
 </html>
