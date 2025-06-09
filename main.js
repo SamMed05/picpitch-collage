@@ -112,6 +112,12 @@ function setupCardEvents(card) {
       ` rotate(${currentRotation}deg)`;
   });
 
+  // Right-click to delete (PC)
+  card.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    card.remove();
+  });
+
   // CONSOLIDATED: Single mousedown handler for both drag and long-press
   card.addEventListener("mousedown", function (e) {
     if (e.button !== 0) return; // Only left click
@@ -128,11 +134,11 @@ function setupCardEvents(card) {
     dragOffset.x = e.clientX - initialCardLeft;
     dragOffset.y = e.clientY - initialCardTop;
 
-    // Start long-press timer
+    // Start long-press timer for deletion
     longPressStarted = true;
     longPressTimer = setTimeout(() => {
       // Only delete if we haven't started dragging
-      if (!isDragging) {
+      if (!isDragging && longPressStarted) {
         // Vibrate if supported (mostly for mobile)
         if (navigator.vibrate) {
           navigator.vibrate(50);
@@ -182,21 +188,23 @@ function setupCardEvents(card) {
     }
   });
 
-  // Touch-based long press
+  // Touch-based long press for deletion
   card.addEventListener("touchstart", function (e) {
-    // Don't cancel click events immediately
-    longPressStarted = true;
-    longPressTimer = setTimeout(() => {
-      if (!isDragging) {  // Only delete if we haven't started dragging
-        if (navigator.vibrate) {
-          navigator.vibrate(50);
+    if (e.touches.length === 1) {
+      // Single finger - start long press timer for deletion
+      longPressStarted = true;
+      longPressTimer = setTimeout(() => {
+        if (!isDragging && longPressStarted) {
+          if (navigator.vibrate) {
+            navigator.vibrate(50);
+          }
+          card.remove();
+          longPressStarted = false;
+          // Prevent click from triggering after long press
+          hasDraggedThisInteraction = true;
         }
-        card.remove();
-        longPressStarted = false;
-        // Prevent click from triggering after long press
-        hasDraggedThisInteraction = true;
-      }
-    }, 800);
+      }, 800);
+    }
   }, { passive: true });
 
   card.addEventListener("touchend", function () {
@@ -455,7 +463,12 @@ window.addEventListener("resize", () => {
 
 // Add touch support for mobile devices
 function enableTouchSupport() {
-  // Handle touch events for card dragging
+  let initialDistance = 0;
+  let initialRotation = 0;
+  let currentRotatingCard = null;
+  let isRotating = false;
+
+  // Handle touch events for card dragging and rotation
   document.addEventListener("touchstart", function (e) {
     // Find if we're touching a card
     let element = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
@@ -471,22 +484,40 @@ function enableTouchSupport() {
     }
 
     if (cardElement) {
-      // ONLY handle drag initialization here, not long press
-      // Convert touch to mouse event for compatibility with existing code
-      const touch = e.touches[0];
-      hasDraggedThisInteraction = false;
-      currentDragCard = cardElement;
+      if (e.touches.length === 1) {
+        // Single finger - handle drag initialization
+        hasDraggedThisInteraction = false;
+        currentDragCard = cardElement;
 
-      // Calculate drag offset as in mousedown
-      const cardStyle = window.getComputedStyle(cardElement);
-      dragOffset.x = touch.clientX - parseFloat(cardStyle.left);
-      dragOffset.y = touch.clientY - parseFloat(cardStyle.top);
+        // Calculate drag offset as in mousedown
+        const cardStyle = window.getComputedStyle(cardElement);
+        dragOffset.x = e.touches[0].clientX - parseFloat(cardStyle.left);
+        dragOffset.y = e.touches[0].clientY - parseFloat(cardStyle.top);
+      } else if (e.touches.length === 2) {
+        // Two fingers - handle rotation
+        e.preventDefault();
+        isRotating = true;
+        currentRotatingCard = cardElement;
+        
+        // Calculate initial distance and rotation
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialDistance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) + 
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+        
+        // Get current rotation from the card
+        const currentTransform = cardElement.style.transform || "";
+        const rotateMatch = currentTransform.match(/rotate\(([^)]+)deg\)/);
+        initialRotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+      }
     }
   }, { passive: false });
 
-  // Handle touch move for dragging
+  // Handle touch move for dragging and rotation
   document.addEventListener("touchmove", function (e) {
-    if (currentDragCard) {
+    if (e.touches.length === 1 && currentDragCard && !isRotating) {
       e.preventDefault(); // Prevent scrolling while dragging
 
       // Clear long-press timer as soon as movement is detected
@@ -516,31 +547,57 @@ function enableTouchSupport() {
       const y = touch.clientY - dragOffset.y;
       currentDragCard.style.left = `${x}px`;
       currentDragCard.style.top = `${y}px`;
+    } else if (e.touches.length === 2 && currentRotatingCard && isRotating) {
+      e.preventDefault();
+      
+      // Calculate rotation based on angle between two fingers
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      const angle = Math.atan2(touch2.clientY - touch1.clientY, touch2.clientX - touch1.clientX);
+      const degrees = angle * (180 / Math.PI);
+      
+      // Apply rotation to the card
+      const currentTransform = currentRotatingCard.style.transform || "";
+      const newRotation = initialRotation + (degrees * 0.5); // Scale down rotation sensitivity
+      
+      currentRotatingCard.style.transform =
+        currentTransform.replace(/rotate\([^)]+deg\)/, "").trim() +
+        ` rotate(${newRotation}deg)`;
     }
   }, { passive: false });
 
   // Handle touch end
-  document.addEventListener("touchend", function () {
-    if (isDragging && currentDragCard) {
-      // Reset styles as in mouseup
-      const tf = currentDragCard.style.transform || "";
-      const m = tf.match(/rotate\((-?\d+(\.\d+)?)deg\)/);
-      const rot = m ? parseFloat(m[1]) : 0;
-      currentDragCard.style.transform = `rotate(${rot}deg)`;
+  document.addEventListener("touchend", function (e) {
+    if (e.touches.length === 0) {
+      // All fingers lifted
+      if (isDragging && currentDragCard) {
+        // Reset styles as in mouseup
+        const tf = currentDragCard.style.transform || "";
+        const m = tf.match(/rotate\((-?\d+(\.\d+)?)deg\)/);
+        const rot = m ? parseFloat(m[1]) : 0;
+        currentDragCard.style.transform = `rotate(${rot}deg)`;
 
-      currentDragCard.classList.remove("dragging");
-      currentDragCard.style.cursor = "grab";
+        currentDragCard.classList.remove("dragging");
+        currentDragCard.style.cursor = "grab";
 
-      // If no drag occurred, treat as click
-      if (!hasDraggedThisInteraction) {
-        currentTargetCard = currentDragCard;
-        fileInput.click();
+        // If no drag occurred and not rotating, treat as click
+        if (!hasDraggedThisInteraction && !isRotating) {
+          currentTargetCard = currentDragCard;
+          fileInput.click();
+        }
       }
-    }
 
-    // Reset drag state
-    isDragging = false;
-    currentDragCard = null;
+      // Reset all states
+      isDragging = false;
+      currentDragCard = null;
+      isRotating = false;
+      currentRotatingCard = null;
+    } else if (e.touches.length === 1 && isRotating) {
+      // One finger lifted during rotation - stop rotating
+      isRotating = false;
+      currentRotatingCard = null;
+    }
   });
 
   // Touch support for help tooltip
@@ -552,47 +609,6 @@ function enableTouchSupport() {
     } else {
       showHelp();
     }
-  });
-
-  // Touch support for card rotation (double tap to rotate)
-  let lastTapTime = 0;
-  document.addEventListener("touchend", function (e) {
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTapTime;
-
-    // Detect double tap
-    if (tapLength < 500 && tapLength > 0) {
-      let element = document.elementFromPoint(
-        e.changedTouches[0].clientX,
-        e.changedTouches[0].clientY
-      );
-      let cardElement = null;
-
-      // Find card container parent
-      while (element && !cardElement) {
-        if (element.classList.contains('card-container')) {
-          cardElement = element;
-          break;
-        }
-        element = element.parentElement;
-      }
-
-      if (cardElement) {
-        // Rotate card on double tap
-        const currentTransform = cardElement.style.transform || "";
-        const rotateMatch = currentTransform.match(/rotate\(([^)]+)deg\)/);
-        let currentRotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
-
-        // Rotate by 15 degrees
-        currentRotation += 15;
-
-        cardElement.style.transform =
-          currentTransform.replace(/rotate\([^)]+deg\)/, "").trim() +
-          ` rotate(${currentRotation}deg)`;
-      }
-    }
-
-    lastTapTime = currentTime;
   });
 }
 

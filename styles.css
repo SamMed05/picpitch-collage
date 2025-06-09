@@ -148,6 +148,26 @@
   .help-content {
     max-width: 260px;
   }
+
+  /* Adjust the dark toggle switch size in mobile menu */
+  #darkToggleMobile.dark-toggle {
+    width: 40px;
+    height: 22px;
+    margin: 0;
+  }
+
+  /* Adjust ::after for the mobile dark toggle */
+  #darkToggleMobile.dark-toggle::after {
+    width: 18px; /* Smaller circle */
+    height: 18px; /* Smaller circle */
+    top: 2px; /* Keeps it vertically centered (22-18)/2 */
+    left: 2px;
+  }
+
+  #darkToggleMobile.dark-toggle.active::after {
+    transform: translateX(18px); 
+    /* Correct translation is 40 (width) - 18 (circle) - 2 (left) - 2 (right padding) = 18 */
+  }
 }
 
 /* Extra small devices */
@@ -200,7 +220,18 @@
     width: 40px;
     height: 22px;
     margin: 0;
+  }
 
+  /* Adjust ::after for the mobile dark toggle */
+  #darkToggleMobile.dark-toggle::after {
+    width: 18px; /* Smaller circle */
+    height: 18px; /* Smaller circle */
+    top: 2px; /* Keeps it vertically centered (22-18)/2 */
+    left: 2px;
+  }
+
+  #darkToggleMobile.dark-toggle.active::after {
+    transform: translateX(18px);
   }
 
   /* Made the slider more touch-friendly in mobile menu */
@@ -216,6 +247,11 @@
     margin-bottom: 4px;
     display: inline-flex;
     align-items: center;
+  }
+
+  /* Offset scaled landscape checkbox label for better alignment in mobile panel */
+  .controls-panel .control-group .mb-3 > label.flex {
+    margin-left: 10px;
   }
 }
 
