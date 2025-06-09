@@ -67,7 +67,8 @@
   position: fixed;
   bottom: 70px;
   right: 20px;
-  background: rgba(243, 244, 246, 0.9); /* light gray, slightly more opaque */
+  background: rgba(243, 244, 246, 0.9);
+  /* light gray, slightly more opaque */
   border: 1px solid rgba(156, 163, 175, 0.5);
   border-radius: 12px;
   padding: 16px;
@@ -87,6 +88,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -97,6 +99,140 @@
   .card-container {
     width: 180px;
     height: 270px;
+  }
+
+  /* For mobile */
+  #headerSection {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #headerSection>div:last-child {
+    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  /* Adjust buttons for better mobile experience */
+  #addCard,
+  #clearAll {
+    width: calc(50% - 8px);
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  /* Make controls more touch-friendly */
+  .custom-checkbox {
+    width: 24px;
+    height: 24px;
+  }
+
+  .custom-slider {
+    width: 120px;
+  }
+
+  .custom-slider::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Help tooltip adjustments */
+  .help-tooltip {
+    width: 40px;
+    height: 40px;
+    bottom: 15px;
+    right: 15px;
+  }
+
+  .help-content {
+    max-width: 260px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .card-container {
+    width: 140px;
+    height: 210px;
+    border-radius: 30px;
+  }
+
+  .card-image {
+    border-radius: 30px;
+  }
+
+  /* Simplified header */
+  h1.text-3xl {
+    font-size: 1.5rem;
+  }
+
+  .logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Full-width controls */
+  #addCard,
+  #clearAll {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  /* Ensure help content is readable */
+  .help-content {
+    max-width: calc(100vw - 40px);
+    bottom: 65px;
+  }
+
+  /* Adjust placeholder icon size */
+  .placeholder-icon svg {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .placeholder-icon p {
+    font-size: 0.75rem;
+  }
+
+  /* Adjust the dark toggle switch size in mobile menu */
+  #darkToggleMobile.dark-toggle {
+    width: 40px;
+    height: 22px;
+    margin: 0;
+
+  }
+
+  /* Made the slider more touch-friendly in mobile menu */
+  .controls-panel .custom-slider {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 8px;
+  }
+
+  /* Improve spacing for labels */
+  .control-group label {
+    margin-bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* Touch-specific optimizations */
+@media (pointer: coarse) {
+
+  /* Larger touch targets */
+  button,
+  label,
+  .custom-checkbox,
+  .dark-toggle {
+    transform: scale(1.1);
+  }
+
+  /* Disable hover styles that can cause issues on touch devices */
+  .help-tooltip:hover {
+    transform: none;
   }
 }
 
@@ -203,13 +339,16 @@
   margin-right: 8px;
   cursor: pointer;
 }
+
 .custom-checkbox:hover {
   border-color: #6366f1;
 }
+
 .custom-checkbox:checked {
   background: #6366f1;
   border-color: #6366f1;
 }
+
 .custom-checkbox:checked::after {
   content: "";
   position: absolute;
@@ -224,7 +363,8 @@
 
 /* Custom slider */
 .custom-slider {
-  -webkit-appearance: none; /* remove its default styling for the slider element */
+  -webkit-appearance: none;
+  /* remove its default styling for the slider element */
   appearance: none;
   width: 100px;
   height: 6px;
@@ -235,6 +375,7 @@
   margin-left: 12px;
   margin-right: 8px;
 }
+
 .custom-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 20px;
@@ -246,10 +387,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
+
 .custom-slider::-webkit-slider-thumb:hover {
   transform: scale(1.1);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
 }
+
 .custom-slider::-moz-range-thumb {
   width: 15px;
   height: 15px;
@@ -264,14 +407,17 @@
   background: linear-gradient(135deg, #4338ca, #7c3aed);
   border-color: rgba(255, 255, 255, 0.1);
 }
+
 .dark .custom-checkbox {
   background: #374151;
   border-color: #6b7280;
 }
+
 .dark .custom-checkbox:checked {
   background: #6366f1;
   border-color: #6366f1;
 }
+
 .dark .custom-slider {
   background: #4b5563;
 }
@@ -279,4 +425,174 @@
 .dark label.text-sm {
   color: white;
   transition: all 0.2s ease;
+}
+
+
+/* Floating Menu and Controls Panel for Mobile */
+@media (max-width: 480px) {
+
+  /* Floating menu button */
+  .controls-menu-button {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5D5CDE, #4338ca);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 2001;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Menu button icons - consolidated here */
+  .controls-menu-button svg,
+  .controls-menu-button .menu-icon,
+  .controls-menu-button .close-icon {
+    width: 24px;
+    height: 24px;
+    transition: all 0.3s ease;
+  }
+
+  .controls-menu-button .hidden {
+    display: none;
+  }
+
+  /* Controls panel with improved transitions */
+  .controls-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 250px;
+    height: 100%;
+    background: white;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    padding: 20px;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .controls-panel.show {
+    transform: translateX(0) !important;
+  }
+
+  .dark .controls-panel {
+    background: #1f2937;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .controls-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .controls-panel-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .controls-panel-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #6b7280;
+  }
+
+  .dark .controls-panel-close {
+    color: #e5e7eb;
+  }
+
+  .control-group {
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Add better alignment for form controls in groups */
+  .control-group .flex {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* Fix dark mode toggle alignment */
+  .control-group .flex span {
+    flex: 1;
+  }
+
+  /* Fix checkbox alignment */
+  .mb-3 label.flex {
+    display: flex;
+    align-items: center;
+  }
+
+  .mb-3 label.flex input {
+    margin-right: 8px;
+  }
+
+  .dark .control-group {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Hide header controls on small screens */
+  #headerSection>div:last-child>*:not(.logo) {
+    display: none;
+  }
+
+  /* Make buttons in panel full width */
+  .controls-panel button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  /* Overlay when menu is open */
+  .panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .panel-overlay.show {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* Dark mode additions for mobile menu */
+@media (max-width: 480px) {
+  .dark .controls-panel {
+    background: #1f2937;
+  }
+
+  .dark .controls-panel-title {
+    color: #f3f4f6;
+  }
+
+  .dark .control-group {
+    border-color: #374151;
+  }
 }
